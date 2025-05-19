@@ -2,6 +2,8 @@
 
 A Python tool to export your manga follows from MangaDex to AniList.
 
+![image](https://github.com/user-attachments/assets/8566e4b6-ba5e-4220-90c8-8119835b6b5f)
+
 ## Features
 
 - Exports manga follows from MangaDex to AniList
