@@ -251,13 +251,13 @@ def main():
                 
                 try:
                     # Get manga details for the batch
-                    batch_task = progress.add_task(
+                    fetch_task = progress.add_task(
                         f"[bold green]Fetching batch {current_batch} of {total_batches}...",
                         total=None
                     )
                     batch_data = md_client.get_manga_batch(batch_ids)
-                    progress.update(batch_task, completed=True, total=1)
-                    progress.remove_task(batch_task)
+                    progress.update(fetch_task, completed=True, total=1)
+                    progress.remove_task(fetch_task)
                     
                     # Process each manga in the batch
                     manga_task = progress.add_task(
