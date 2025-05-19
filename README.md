@@ -48,7 +48,7 @@ LOG_LEVEL=INFO  # DEBUG, INFO, WARNING, ERROR, CRITICAL
 ```
 
 2. Get your MangaDex API credentials:
-   - Go to https://mangadex.org/settings/client
+   - Go to https://mangadex.org/settings -> Api Clients
    - Create a new client
    - Copy the client ID and secret
 
@@ -80,7 +80,3 @@ The exporter creates and manages several files in the `data` directory:
 
 - `manga_statuses.json`: Cached manga statuses from MangaDex
 - `sync_progress.json`: Progress for the current sync
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details. 
