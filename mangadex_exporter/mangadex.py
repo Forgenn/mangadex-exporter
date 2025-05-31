@@ -272,6 +272,70 @@ class MangaDexClient:
                 return data["statuses"]
             raise
     
+    def get_read_chapters(self, manga_id: str) -> Dict[str, Any]:
+        """
+        Get the read chapters for a manga.
+        
+        Args:
+            manga_id: The MangaDex manga ID
+            
+        Returns:
+            Dict containing the read chapters data with structure:
+            {
+                "result": "ok",
+                "data": ["chapter-uuid-1", "chapter-uuid-2", ...]
+            }
+        """
+        if not self.auth:
+            self.login()
+        
+        max_retries = 3
+        retry_delay = 60  # 1 minute
+        
+        for attempt in range(max_retries):
+            try:
+                response = self.client.get(
+                    f"/manga/{manga_id}/read"
+                )
+                response.raise_for_status()
+                data = response.json()
+                
+                # Validate response structure
+                if "result" not in data or data["result"] != "ok":
+                    raise ValueError(f"Invalid response structure: missing or invalid 'result' field in response for manga {manga_id}")
+                if "data" not in data or not isinstance(data["data"], list):
+                    raise ValueError(f"Invalid response structure: missing or invalid 'data' field in response for manga {manga_id}")
+                
+                return data
+                
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 401:
+                    # Token might be expired, try to refresh
+                    self.refresh_token()
+                    continue
+                elif e.response.status_code == 429:  # Rate limit
+                    if attempt < max_retries - 1:
+                        print(f"Rate limit hit, waiting {retry_delay} seconds before retry...")
+                        time.sleep(retry_delay)
+                        continue
+                elif e.response.status_code == 404:
+                    # Manga not found or no read chapters
+                    return {"result": "ok", "data": []}
+                else:
+                    print(f"HTTP error {e.response.status_code} fetching read chapters for manga {manga_id}")
+                    if attempt < max_retries - 1:
+                        print(f"Retrying in {retry_delay} seconds...")
+                        time.sleep(retry_delay)
+                        continue
+                raise
+            except Exception as e:
+                print(f"Error fetching read chapters for manga {manga_id}: {str(e)}")
+                if attempt < max_retries - 1:
+                    print(f"Retrying in {retry_delay} seconds...")
+                    time.sleep(retry_delay)
+                    continue
+                raise
+    
     def get_manga_batch(self, manga_ids: List[str]) -> Dict[str, Any]:
         """
         Get details for a batch of manga using the /manga endpoint.

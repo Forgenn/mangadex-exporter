@@ -231,6 +231,58 @@ class AniListClient:
                         continue
                 raise
     
+    def update_chapters_read(self, media_id: int, progress: int) -> Dict[str, Any]:
+        """
+        Update the number of chapters read for a manga on AniList.
+        
+        Args:
+            media_id: The AniList media ID
+            progress: The number of chapters read
+            
+        Returns:
+            Dict containing the response from AniList
+        """
+        if not self.auth:
+            raise ValueError("Not authenticated with AniList")
+        
+        max_retries = 3
+        retry_delay = 60  # 1 minute
+        
+        query = """
+        mutation ($mediaId: Int, $progress: Int) {
+            SaveMediaListEntry(mediaId: $mediaId, progress: $progress) {
+                id
+                progress
+            }
+        }
+        """
+        
+        variables = {
+            "mediaId": media_id,
+            "progress": progress
+        }
+        
+        for attempt in range(max_retries):
+            try:
+                self._check_rate_limit()
+                response = self.client.post(
+                    "",
+                    json={
+                        "query": query,
+                        "variables": variables
+                    }
+                )
+                self._update_rate_limit(response)
+                response.raise_for_status()
+                return response.json()
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 429:
+                    if attempt < max_retries - 1:
+                        print(f"AniList rate limit hit, waiting {retry_delay} seconds before retry...")
+                        time.sleep(retry_delay)
+                        continue
+                raise
+    
     def search_manga(self, title: str) -> Dict[str, Any]:
         """
         Search for a manga on AniList by title.

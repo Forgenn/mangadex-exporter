@@ -340,19 +340,62 @@ def main():
                                     result = al_client.save_manga_follow(manga["id"], status=anilist_status)
                                     final_status = result['data']['SaveMediaListEntry']['status']
                                     
-                                    # Update panel with success
-                                    live.update(
-                                        Group(
-                                            progress,
-                                            Panel(
-                                                f"Title: [green]{anilist_title}[/green]\n"
-                                                f"Status: [green]{final_status}[/green]\n"
-                                                f"Action: [green]Successfully added to AniList[/green]",
-                                                title="Current Manga",
-                                                border_style="green"
+                                    # Get read chapters from MangaDex
+                                    read_chapters = md_client.get_read_chapters(md_id)
+                                    if "data" in read_chapters:
+                                        chapters = read_chapters["data"]
+                                        if chapters:
+                                            # Count the number of read chapters
+                                            chapters_read = len(chapters)
+                                            
+                                            # Update chapters read on AniList
+                                            progress_result = al_client.update_chapters_read(manga["id"], chapters_read)
+                                            final_progress = progress_result['data']['SaveMediaListEntry']['progress']
+                                            
+                                            # Update panel with success including progress
+                                            live.update(
+                                                Group(
+                                                    progress,
+                                                    Panel(
+                                                        f"Title: [green]{anilist_title}[/green]\n"
+                                                        f"Status: [green]{final_status}[/green]\n"
+                                                        f"Chapters Read: [green]{final_progress}[/green]\n"
+                                                        f"Action: [green]Successfully added to AniList[/green]",
+                                                        title="Current Manga",
+                                                        border_style="green"
+                                                    )
+                                                )
+                                            )
+                                        else:
+                                            # Update panel with success (no chapters read)
+                                            live.update(
+                                                Group(
+                                                    progress,
+                                                    Panel(
+                                                        f"Title: [green]{anilist_title}[/green]\n"
+                                                        f"Status: [green]{final_status}[/green]\n"
+                                                        f"Chapters Read: [yellow]0[/yellow]\n"
+                                                        f"Action: [green]Successfully added to AniList[/green]",
+                                                        title="Current Manga",
+                                                        border_style="green"
+                                                    )
+                                                )
+                                            )
+                                    else:
+                                        # Update panel with success (couldn't get chapters)
+                                        live.update(
+                                            Group(
+                                                progress,
+                                                Panel(
+                                                    f"Title: [green]{anilist_title}[/green]\n"
+                                                    f"Status: [green]{final_status}[/green]\n"
+                                                    f"Chapters Read: [yellow]Could not fetch[/yellow]\n"
+                                                    f"Action: [green]Successfully added to AniList[/green]",
+                                                    title="Current Manga",
+                                                    border_style="green"
+                                                )
                                             )
                                         )
-                                    )
                                 else:
                                     # Add to non-matched list
                                     non_matched[md_id] = {
